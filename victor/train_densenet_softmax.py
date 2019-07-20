@@ -362,7 +362,7 @@ if __name__ == '__main__':
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule],
                                 max_queue_size=5,
-                                workers=6)
+                                workers=1)
 
         lrSchedule = LearningRateScheduler(lambda epoch: schedule_steps(epoch, [(5e-6, 2), (2e-4, 15), (1e-4, 50), (5e-5, 70), (2e-5, 80), (1e-5, 90)]))
         for l in model.layers:
@@ -373,12 +373,12 @@ if __name__ == '__main__':
         model_checkpoint = ModelCheckpoint(path.join(models_folder, 'densenet_weights_{0}.h5'.format(it)), monitor='val_loss', 
                                             save_best_only=True, save_weights_only=True, mode='min')
         model.fit_generator(generator=data_gen,
-                                epochs=90, steps_per_epoch=steps_per_epoch, verbose=2,
+                                epochs=6, steps_per_epoch=steps_per_epoch, verbose=2,
                                 validation_data=val_data_generator(val_idx, val_batch, validation_steps),
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule, model_checkpoint], #, tbCallback
                                 max_queue_size=5,
-                                workers=6)
+                                workers=1)
 
         del model
         del model_checkpoint
@@ -397,12 +397,12 @@ if __name__ == '__main__':
         model_checkpoint2 = ModelCheckpoint(path.join(models_folder, 'densenet_weights_{0}.h5'.format(it)), monitor='val_loss', 
                                             save_best_only=True, save_weights_only=True, mode='min')
         model.fit_generator(generator=data_gen,
-                                epochs=130, steps_per_epoch=steps_per_epoch, verbose=2,
+                                epochs=7, steps_per_epoch=steps_per_epoch, verbose=2,
                                 validation_data=val_data_generator(val_idx, val_batch, validation_steps),
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule, model_checkpoint2], #, tbCallback
                                 max_queue_size=5,
-                                workers=6,
+                                workers=1,
                                 initial_epoch=90)
         
         del model

@@ -437,6 +437,7 @@ if __name__ == '__main__':
         if path.isfile(path.join(train_pred_folder, f)) and '.png' in f:
             all_files.append(path.join(train_pred_folder, f))
             paramss.append((f, train_pred_folder, images_folder, masks_folder, extend_mask_train))
+
             
     with Pool(processes=DATA_THREADS) as pool:
         results = pool.starmap(get_inputs, paramss)

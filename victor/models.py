@@ -1,9 +1,11 @@
+import keras
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Input, BatchNormalization, Conv2D, MaxPooling2D, AveragePooling2D, ZeroPadding2D, concatenate, Concatenate, UpSampling2D, Activation
 from keras.losses import categorical_crossentropy
-from keras.applications.inception_resnet_v2 import InceptionResNetV2, inception_resnet_block, conv2d_bn
-from keras.applications.densenet import DenseNet121, dense_block, transition_block
+from keras_applications.inception_resnet_v2 import InceptionResNetV2, inception_resnet_block, conv2d_bn
+from keras_applications.densenet import DenseNet121, dense_block, transition_block
+from tqdm import tqdm
 
 bn_axis = 3
 channel_axis = bn_axis
@@ -54,6 +56,9 @@ def conv_block(prev, num_filters, kernel=(3, 3), strides=(1, 1), act='relu', pre
     return conv
     
 def get_densenet121_unet_softmax(input_shape, weights='imagenet'):
+    densenet = DenseNet121(input_shape=input_shape + (3,), weights=weights, include_top=False,
+                           backend=K, layers=keras.layers, models=keras.models, utils=keras.utils)
+
     blocks = [6, 12, 24, 16]
     img_input = Input(input_shape + (4,))
     
@@ -101,19 +106,26 @@ def get_densenet121_unet_softmax(input_shape, weights='imagenet'):
     model = Model(img_input, res)
     
     if weights == 'imagenet':
-        densenet = DenseNet121(input_shape=input_shape + (3,), weights=weights, include_top=False)
+        #densenet = DenseNet121(input_shape=input_shape + (3,), weights=weights, include_top=False)
         w0 = densenet.layers[2].get_weights()
         w = model.layers[2].get_weights()
         w[0][:, :, [0, 1, 2], :] = 0.9 * w0[0][:, :, :3, :]
         w[0][:, :, 3, :] = 0.1 * w0[0][:, :, 1, :]
         model.layers[2].set_weights(w)
-        for i in range(3, len(densenet.layers)):
+        print("Setting weights")
+        for i in tqdm(range(3, len(densenet.layers))):
             model.layers[i].set_weights(densenet.layers[i].get_weights())
             model.layers[i].trainable = False
     
     return model
 
 def get_inception_resnet_v2_unet_softmax(input_shape, weights='imagenet'):
+    kwargs = {"backend": K, "layers": keras.layers, "models": keras.models, "utils": keras.utils}
+    # if weights == 'imagenet':
+    inception_resnet_v2 = InceptionResNetV2(weights=weights, include_top=False,
+                                            input_shape=input_shape + (3,), **kwargs)
+
+        
     inp = Input(input_shape + (4,))
     
     # Stem block: 35 x 35 x 192
@@ -214,8 +226,9 @@ def get_inception_resnet_v2_unet_softmax(input_shape, weights='imagenet'):
     model = Model(inp, res)
     
     if weights == 'imagenet':
-        inception_resnet_v2 = InceptionResNetV2(weights=weights, include_top=False, input_shape=input_shape + (3,))
-        for i in range(2, len(inception_resnet_v2.layers)-1):
+        #inception_resnet_v2 = InceptionResNetV2(weights=weights, include_top=False, input_shape=input_shape + (3,))
+        print("Setting weights")
+        for i in tqdm(range(2, len(inception_resnet_v2.layers)-1)):
             model.layers[i].set_weights(inception_resnet_v2.layers[i].get_weights())
             model.layers[i].trainable = False
         

@@ -352,17 +352,21 @@ if __name__ == '__main__':
         
         lrSchedule = LearningRateScheduler(lambda epoch: schedule_steps(epoch, [(1e-5, 2), (3e-4, 4), (1e-4, 6)]))
         
+        print("Getting model")
         model = get_inception_resnet_v2_unet_softmax((None, None), weights='imagenet')
+        
+        print("Compiling model")
         model.compile(loss=softmax_dice_loss,
                         optimizer=Adam(lr=3e-4, amsgrad=True),
                         metrics=[dice_coef_rounded_ch0, dice_coef_rounded_ch1, metrics.categorical_crossentropy])
+        print("Starting fit")
         model.fit_generator(generator=data_gen,
                                 epochs=6, steps_per_epoch=steps_per_epoch, verbose=2,
                                 validation_data=val_data_generator(val_idx, val_batch, validation_steps),
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule],
                                 max_queue_size=5,
-                                workers=6)
+                                workers=1)
 
         lrSchedule = LearningRateScheduler(lambda epoch: schedule_steps(epoch, [(5e-6, 2), (2e-4, 10), (1e-4, 40), (5e-5, 55), (2e-5, 65), (1e-5, 70)]))
         for l in model.layers:
@@ -373,12 +377,12 @@ if __name__ == '__main__':
         model_checkpoint = ModelCheckpoint(path.join(models_folder, 'inception_resnet_v2_weights_{0}.h5'.format(it)), monitor='val_loss', 
                                             save_best_only=True, save_weights_only=True, mode='min')
         model.fit_generator(generator=data_gen,
-                                epochs=70, steps_per_epoch=steps_per_epoch, verbose=2,
+                                epochs=6, steps_per_epoch=steps_per_epoch, verbose=2,
                                 validation_data=val_data_generator(val_idx, val_batch, validation_steps),
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule, model_checkpoint], #, tbCallback
                                 max_queue_size=5,
-                                workers=6)
+                                workers=1)
 
         del model
         del model_checkpoint
@@ -397,12 +401,12 @@ if __name__ == '__main__':
         model_checkpoint2 = ModelCheckpoint(path.join(models_folder, 'inception_resnet_v2_weights_{0}.h5'.format(it)), monitor='val_loss', 
                                             save_best_only=True, save_weights_only=True, mode='min')
         model.fit_generator(generator=data_gen,
-                                epochs=100, steps_per_epoch=steps_per_epoch, verbose=2,
+                                epochs=6, steps_per_epoch=steps_per_epoch, verbose=2,
                                 validation_data=val_data_generator(val_idx, val_batch, validation_steps),
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule, model_checkpoint2], #, tbCallback
                                 max_queue_size=5,
-                                workers=6,
+                                workers=1,
                                 initial_epoch=70)
         
         del model

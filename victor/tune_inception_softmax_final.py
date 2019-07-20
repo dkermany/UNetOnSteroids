@@ -270,7 +270,8 @@ if __name__ == '__main__':
     if not path.isdir(models_folder):
         mkdir(models_folder)
         
-    df = df[(df['METRIC_SCORE'] > 0.4) | ((df['source'] == 'train') & (df['METRIC_SCORE'] > 0.3)) | (df['img_id'].isin(all_folds_ids))].reset_index().copy()
+    #df = df[(df['METRIC_SCORE'] > 0.4) | ((df['source'] == 'train') & (df['METRIC_SCORE'] > 0.3)) | (df['img_id'].isin(all_folds_ids))].reset_index().copy()
+    df = df[(df['source'] == 'train') | (df['img_id'].isin(all_folds_ids))].reset_index().copy()
     all_ids = df['img_id'].values
     all_sources = df['source'].values
     
@@ -363,12 +364,12 @@ if __name__ == '__main__':
         model_checkpoint = ModelCheckpoint(path.join(models_folder, 'inception_resnet_v2_weights_{0}.h5'.format(it)), monitor='val_loss', 
                                             save_best_only=True, save_weights_only=True, mode='min')
         model.fit_generator(generator=data_gen,
-                                epochs=25, steps_per_epoch=steps_per_epoch, verbose=2,
+                                epochs=4, steps_per_epoch=steps_per_epoch, verbose=2,
                                 validation_data=val_data_generator(val_idx, val_batch, validation_steps),
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule, model_checkpoint], #, tbCallback
                                 max_queue_size=5,
-                                workers=6,
+                                workers=1,
                                 initial_epoch=0)
         
         del model

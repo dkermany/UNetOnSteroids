@@ -55,7 +55,7 @@ python train.py \
 --batch_size 16  \
 --crop_size 256 \
 --steps_per_epoch 500 \
---epochs 16 \
+--epochs 4 \
 --use_full_masks \
 --preprocessing_function caffe \
 --weights "nn_models/best_resnet101_2_fold{}.h5"

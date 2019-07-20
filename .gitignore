@@ -164,3 +164,7 @@ masks_all
 labels_all
 folds.csv
 lgbm_models
+*.png
+data
+data_test
+predictions

@@ -96,10 +96,10 @@ class Estimator:
         if training:
             loss.backward()
 
-        meter['loss'] += loss.data.cpu().numpy()[0]
-        meter['dice'] += dice_ch2.data.cpu().numpy()[0] / iter_size
-        meter['bce'] += bce.data.cpu().numpy()[0] / iter_size
-        meter['dr'] += dice_r.data.cpu().numpy()[0] / iter_size
+        meter['loss'] += loss.detach().item()
+        meter['dice'] += dice_ch2.detach().item() / iter_size
+        meter['bce'] += bce.detach().item() / iter_size
+        meter['dr'] += dice_r.detach().item() / iter_size
         return meter
 
     def calculate_loss_single_channel(self, output, target, meter, training, iter_size):
@@ -113,10 +113,10 @@ class Estimator:
         if training:
             loss.backward()
 
-        meter['loss'] += loss.data.cpu().numpy()[0]
-        meter['dice'] += dice.data.cpu().numpy()[0] / iter_size
-        meter['bce'] += bce.data.cpu().numpy()[0] / iter_size
-        meter['dr'] += dice_r.data.cpu().numpy()[0] / iter_size
+        meter['loss'] += loss.detach().item()
+        meter['dice'] += dice.detach().item() / iter_size
+        meter['bce'] += bce.detach().item() / iter_size
+        meter['dr'] += dice_r.detach().item() / iter_size
         return meter
 
     def calculate_loss_softmax(self, output, target, meter, training, iter_size):
@@ -132,12 +132,20 @@ class Estimator:
         if training:
             loss.backward()
 
-        meter['loss'] += loss.data.cpu().numpy()[0]
-        meter['d_n'] += dice_body.data.cpu().numpy()[0] / iter_size
-        meter['d_b'] += dice_border.data.cpu().numpy()[0] / iter_size
-        meter['ce'] += ce.data.cpu().numpy()[0] / iter_size
-        meter['dr_n'] += dice_r_body.data.cpu().numpy()[0] / iter_size
-        meter['dr_b'] += dice_r_border.data.cpu().numpy()[0] / iter_size
+        # old version threw an index error 
+        # meter['loss'] += loss.data.cpu().numpy()[0]
+        # meter['d_n'] += dice_body.data.cpu().numpy()[0] / iter_size
+        # meter['d_b'] += dice_border.data.cpu().numpy()[0] / iter_size
+        # meter['ce'] += ce.data.cpu().numpy()[0] / iter_size
+        # meter['dr_n'] += dice_r_body.data.cpu().numpy()[0] / iter_size
+        # meter['dr_b'] += dice_r_border.data.cpu().numpy()[0] / iter_size
+
+        meter['loss'] += loss.detach().item()
+        meter['d_n'] += dice_body.detach().item() / iter_size
+        meter['d_b'] += dice_border.detach().item() / iter_size
+        meter['ce'] += ce.detach().item() / iter_size
+        meter['dr_n'] += dice_r_body.detach().item() / iter_size
+        meter['dr_b'] += dice_r_border.detach().item() / iter_size
         return meter
 
     def calculate_loss_sigmoid(self, output, target, meter, training, iter_size):
@@ -155,12 +163,12 @@ class Estimator:
         if training:
             loss.backward()
 
-        meter['loss'] += loss.data.cpu().numpy()[0]
-        meter['d_n'] += dice_body.data.cpu().numpy()[0] / iter_size
-        meter['d_b'] += dice_border.data.cpu().numpy()[0] / iter_size
-        meter['ce'] += ce.data.cpu().numpy()[0] / iter_size
-        meter['dr_n'] += dice_r_body.data.cpu().numpy()[0] / iter_size
-        meter['dr_b'] += dice_r_border.data.cpu().numpy()[0] / iter_size
+        meter['loss'] += loss.detach().item()
+        meter['d_n'] += dice_body.detach().item() / iter_size
+        meter['d_b'] += dice_border.detach().item() / iter_size
+        meter['ce'] += ce.detach().item() / iter_size
+        meter['dr_n'] += dice_r_body.detach().item() / iter_size
+        meter['dr_b'] += dice_r_border.detach().item() / iter_size
         return meter
 
     def calculate_loss_3ch(self, output, target, meter, training, iter_size):
@@ -179,12 +187,12 @@ class Estimator:
         if training:
             loss.backward()
 
-        meter['loss'] += loss.data.cpu().numpy()[0]
-        meter['d_n'] += dice_body.data.cpu().numpy()[0] / iter_size
-        meter['d_b'] += dice_border.data.cpu().numpy()[0] / iter_size
-        meter['ce'] += ce.data.cpu().numpy()[0] / iter_size
-        meter['dr_n'] += dice_r_body.data.cpu().numpy()[0] / iter_size
-        meter['dr_b'] += dice_r_border.data.cpu().numpy()[0] / iter_size
+        meter['loss'] += loss.detach().item()
+        meter['d_n'] += dice_body.detach().item() / iter_size
+        meter['d_b'] += dice_border.detach().item() / iter_size
+        meter['ce'] += ce.detach().item() / iter_size
+        meter['dr_n'] += dice_r_body.detach().item() / iter_size
+        meter['dr_b'] += dice_r_border.detach().item() / iter_size
         return meter
 
 
@@ -198,8 +206,9 @@ class Estimator:
 
         meter = defaultdict(float)
         for input, target in zip(inputs, targets):
-            input = torch.autograd.Variable(input.cuda(async=True), volatile=not training)
-            target = torch.autograd.Variable(target.cuda(async=True), volatile=not training)
+            with torch.set_grad_enabled(training):
+                input = torch.autograd.Variable(input.cuda())
+                target = torch.autograd.Variable(target.cuda())
             output = self.model(input)
             if self.config.sigmoid:
                 meter = self.calculate_loss_3ch(output, target, meter, training, iter_size)
@@ -286,10 +295,10 @@ class PytorchTrain:
             if self.estimator.lr_scheduler is not None and epoch >= self.estimator.config.warmup:
                 self.estimator.lr_scheduler.step(epoch)
 
+            #self.estimator.model.eval()
+            #self.metrics_collection.val_metrics = self._run_one_epoch(epoch, val_loader, training=False)
             self.estimator.model.train()
             self.metrics_collection.train_metrics = self._run_one_epoch(epoch, train_loader, training=True)
-            self.estimator.model.eval()
-            self.metrics_collection.val_metrics = self._run_one_epoch(epoch, val_loader, training=False)
 
             self.callbacks.on_epoch_end(epoch)
 

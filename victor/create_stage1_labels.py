@@ -12,7 +12,7 @@ import shutil
 
 root_data_folder = path.join('..', 'data')
 
-data_folder = path.join(root_data_folder, 'stage1_test')
+data_folder = path.join(root_data_folder, 'stage1_train')
 masks_labels_folder = path.join(root_data_folder, 'labels_all')
 images_out = path.join(root_data_folder, 'images_all')
 

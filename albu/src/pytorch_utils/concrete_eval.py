@@ -31,4 +31,5 @@ class FullImageEvaluator(Evaluator):
             prediction = cv2.cvtColor(prediction, cv2.COLOR_RGB2BGR)
         if self.test:
             name = os.path.split(name)[-1]
+        print("SAVE: {}".format(os.path.join(self.save_dir, prefix + name)))
         cv2.imwrite(os.path.join(self.save_dir, prefix + name), (prediction * 255).astype(np.uint8))

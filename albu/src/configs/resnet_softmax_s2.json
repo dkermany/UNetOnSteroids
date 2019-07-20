@@ -9,7 +9,7 @@
   "nb_epoch": 20,
   "num_channels": 3,
   "test_pad": 64,
-  "epoch_size": 32,
+  "epoch_size": 5,
   "predict_batch_size": 1,
   "results_dir": "../results",
   "target_cols": 256,

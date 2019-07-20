@@ -44,7 +44,8 @@ def to_numpy(batch):
 
 
 def predict(model, batch, flips=flip.FLIP_NONE):
-    batch = torch.autograd.Variable(batch, volatile=True).cuda()
+    with torch.no_grad():
+        batch = torch.autograd.Variable(batch).cuda()
     pred1 = model(batch)
     if flips > flip.FLIP_NONE:
         pred2 = flip_tensor_lr(model(flip_tensor_lr(batch)))

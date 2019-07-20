@@ -85,18 +85,20 @@ class ModelSaver(Callback):
         self.best_only = best_only
 
     def on_epoch_end(self, epoch):
-        loss = float(self.metrics_collection.val_metrics['loss'])
-        need_save = not self.best_only
-        if epoch % self.save_every == 0:
-            if loss < self.metrics_collection.best_loss:
-                self.metrics_collection.best_loss = loss
-                self.metrics_collection.best_epoch = epoch
-                need_save = True
+        #loss = float(self.metrics_collection.val_metrics['loss'])
+        loss = 2.00
+        #need_save = not self.best_only
+        #if epoch % self.save_every == 0:
+        #    if loss < self.metrics_collection.best_loss:
+        #        self.metrics_collection.best_loss = loss
+        #        self.metrics_collection.best_epoch = epoch
+        #        need_save = True
 
-            if need_save:
-                torch.save(deepcopy(self.estimator.model.module),
-                           os.path.join(self.estimator.save_path, self.save_name)
-                           .format(epoch=epoch, loss="{:.2}".format(loss)))
+        #    if need_save:
+        print("SAVING TORCH MODEL TO: {}, as {}".format(self.estimator.save_path, self.save_name))
+        torch.save(deepcopy(self.estimator.model.module),
+                   os.path.join(self.estimator.save_path, self.save_name)
+                   .format(epoch=epoch, loss="{:.2}".format(loss)))
 
 
 def save_checkpoint(epoch, model_state_dict, optimizer_state_dict, path):
@@ -114,12 +116,13 @@ class CheckpointSaver(Callback):
         self.save_name = save_name
 
     def on_epoch_end(self, epoch):
-        loss = float(self.metrics_collection.val_metrics['loss'])
-        if epoch % self.save_every == 0:
-            save_checkpoint(epoch,
-                            self.estimator.model.module.state_dict(),
-                            self.estimator.optimizer.state_dict(),
-                            os.path.join(self.estimator.save_path, self.save_name).format(epoch=epoch, loss="{:.2}".format(loss)))
+        pass
+        #loss = float(self.metrics_collection.val_metrics['loss'])
+        #if epoch % self.save_every == 0:
+        #    save_checkpoint(epoch,
+        #                    self.estimator.model.module.state_dict(),
+        #                    self.estimator.optimizer.state_dict(),
+        #                    os.path.join(self.estimator.save_path, self.save_name).format(epoch=epoch, loss="{:.2}".format(loss)))
 
 
 class LRDropCheckpointSaver(Callback):
@@ -129,12 +132,12 @@ class LRDropCheckpointSaver(Callback):
 
     def on_epoch_end(self, epoch):
         lr_steps = self.estimator.config.lr_steps
-        loss = float(self.metrics_collection.val_metrics['loss'])
-        if epoch + 1 in lr_steps:
-            save_checkpoint(epoch,
-                            self.estimator.model.module.state_dict(),
-                            self.estimator.optimizer.state_dict(),
-                            os.path.join(self.estimator.save_path, self.save_name).format(epoch=epoch, loss="{:.2}".format(loss)))
+        #loss = float(self.metrics_collection.val_metrics['loss'])
+        #if epoch + 1 in lr_steps:
+        #    save_checkpoint(epoch,
+        #                    self.estimator.model.module.state_dict(),
+        #                    self.estimator.optimizer.state_dict(),
+        #                    os.path.join(self.estimator.save_path, self.save_name).format(epoch=epoch, loss="{:.2}".format(loss)))
 
 
 class LRStepScheduler(_LRScheduler):
@@ -154,12 +157,13 @@ class EarlyStopper(Callback):
         self.patience = patience
 
     def on_epoch_end(self, epoch):
-        loss = float(self.metrics_collection.val_metrics['loss'])
-        if loss < self.metrics_collection.best_loss:
-            self.metrics_collection.best_loss = loss
-            self.metrics_collection.best_epoch = epoch
-        if epoch - self.metrics_collection.best_epoch >= self.patience:
-            self.metrics_collection.stop_training = True
+        pass
+        #loss = float(self.metrics_collection.val_metrics['loss'])
+        #if loss < self.metrics_collection.best_loss:
+        #    self.metrics_collection.best_loss = loss
+        #    self.metrics_collection.best_epoch = epoch
+        #if epoch - self.metrics_collection.best_epoch >= self.patience:
+        #    self.metrics_collection.stop_training = True
 
 class ModelFreezer(Callback):
     def on_epoch_begin(self, epoch):
@@ -194,8 +198,8 @@ class TensorBoard(Callback):
         for k, v in self.metrics_collection.train_metrics.items():
             self.writer.add_scalar('train/{}'.format(k), float(v), global_step=epoch)
 
-        for k, v in self.metrics_collection.val_metrics.items():
-            self.writer.add_scalar('val/{}'.format(k), float(v), global_step=epoch)
+        # for k, v in self.metrics_collection.val_metrics.items():
+        #     self.writer.add_scalar('val/{}'.format(k), float(v), global_step=epoch)
 
         for idx, param_group in enumerate(self.estimator.optimizer.param_groups):
             lr = param_group['lr']

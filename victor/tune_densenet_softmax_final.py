@@ -370,7 +370,7 @@ if __name__ == '__main__':
         model_checkpoint3 = ModelCheckpoint(path.join(models_folder, 'densenet_weights_{0}.h5'.format(it)), monitor='val_loss', 
                                             save_best_only=True, save_weights_only=True, mode='min')
         model.fit_generator(generator=data_gen,
-                                epochs=25, steps_per_epoch=steps_per_epoch, verbose=2,
+                                epochs=4, steps_per_epoch=steps_per_epoch, verbose=2,
                                 validation_data=val_data_generator(val_idx, val_batch, validation_steps),
                                 validation_steps=validation_steps,
                                 callbacks=[lrSchedule, model_checkpoint3], #, tbCallback

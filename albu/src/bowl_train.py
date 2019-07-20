@@ -1,7 +1,9 @@
 import torch
+torch.backends.cudnn.benchmark = False
 import os
 import cv2
-from scipy.misc import imread
+#from scipy.misc import imread
+from cv2 import imread
 import numpy as np
 
 from utils import get_csv_folds, update_config, get_folds
@@ -20,6 +22,7 @@ parser.add_argument('config_path')
 parser.add_argument('--fold', type=int)
 parser.add_argument('--training', action='store_true')
 args = parser.parse_args()
+print("Config: {}".format(args.config_path))
 with open(args.config_path, 'r') as f:
     cfg = json.load(f)
     cfg['dataset_path'] = cfg['dataset_path'] + ('' if args.training else '_test')
@@ -41,7 +44,7 @@ if args.training:
     paths = {k: os.path.join(config.dataset_path, p) for k, p in paths.items()}
 else:
     paths = {"images": config.dataset_path}
-num_workers = 0 if os.name == 'nt' else 4
+num_workers = 0 if os.name == 'nt' else 1
 
 class MinSizeImageType(RawImageType):
     def finalyze(self, data):
@@ -55,19 +58,19 @@ class MinSizeImageType(RawImageType):
 class SigmoidBorderImageType(MinSizeImageType):
     def read_mask(self):
         path = os.path.join(self.paths['masks'], self.fn_mapping['masks'](self.fn))
-        mask = imread(path, mode='RGB')
+        mask = imread(path)
         label = self.read_label()
         fin = self.finalyze(mask)
-        data = np.dstack((fin[...,2], fin[...,1], (label > 0).astype(np.uint8) * 255))
+        data = np.dstack((fin[...,0], fin[...,1], (label > 2).astype(np.uint8) * 255))
         return data
 
 class BorderImageType(MinSizeImageType):
     def read_mask(self):
         path = os.path.join(self.paths['masks'], self.fn_mapping['masks'](self.fn))
-        msk = imread(path, mode='RGB')
-        msk[..., 2] = (msk[..., 2] > 127)
-        msk[..., 1] = (msk[..., 1] > 127) * (msk[..., 2] == 0)
-        msk[..., 0] = (msk[..., 1] == 0) * (msk[..., 2] == 0)
+        msk = imread(path)
+        msk[..., 0] = (msk[..., 0] > 127)
+        msk[..., 1] = (msk[..., 1] > 127) * (msk[..., 0] == 0)
+        msk[..., 2] = (msk[..., 1] == 0) * (msk[..., 0] == 0)
         return self.finalyze(msk.astype(np.uint8) * 255)
 
 
@@ -83,6 +86,7 @@ class PaddedSigmoidImageType(SigmoidBorderImageType):
 
 
 def train_bowl():
+    print("Started Train_Bowl")
     torch.backends.cudnn.benchmark = True
     im_type = BorderImageType if not config.sigmoid else SigmoidBorderImageType
     im_val_type = PaddedImageType if not config.sigmoid else PaddedSigmoidImageType
@@ -92,10 +96,13 @@ def train_bowl():
     for fold, (train_idx, val_idx) in enumerate(folds):
         if args.fold is not None and int(args.fold) != fold:
             continue
+        print("Fold: {}".format(fold))
         train(ds, val_ds, fold, train_idx, val_idx, config, num_workers=num_workers, transforms=aug_victor(.97))
+    print("Finished Train_Bowl")
 
 
 def eval_bowl():
+    print("Started Eval_Bowl")
     global config
     test = not args.training
     im_val_type = PaddedImageType if not config.sigmoid else PaddedSigmoidImageType
@@ -110,9 +117,12 @@ def eval_bowl():
     for fold, (t, e) in enumerate(folds):
         if args.fold is not None and int(args.fold) != fold:
             continue
+        print("Fold: {}".format(fold))
         keval.predict(fold, e)
     if test and args.fold is None:
         merge_files(keval.save_dir)
+        print("merge files")
+    print("Finished Eval_Bowl".format(fold))
 
 if __name__ == "__main__":
     train_bowl()
